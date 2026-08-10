@@ -121,6 +121,66 @@
     .grid-3, .price-grid, .portfolio-grid{grid-template-columns:1fr;}
     .price-card.popular{transform:none;}
   }
+
+  /* ===== MOTION ===== */
+  @keyframes fadeInUp{
+    from{opacity:0; transform:translateY(22px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .fade-in-up{opacity:0; animation:fadeInUp 0.9s cubic-bezier(0.16,1,0.3,1) forwards;}
+  .delay-1{animation-delay:0.05s;}
+  .delay-2{animation-delay:0.2s;}
+  .delay-3{animation-delay:0.35s;}
+  .delay-4{animation-delay:0.5s;}
+  .delay-5{animation-delay:0.65s;}
+
+  @keyframes breathe{
+    0%, 100%{transform:translateX(-50%) scale(1); opacity:0.9;}
+    50%{transform:translateX(-50%) scale(1.12); opacity:1;}
+  }
+  @keyframes drift{
+    0%, 100%{transform:translate(0, 0);}
+    50%{transform:translate(20px, -16px);}
+  }
+  .hero::before{animation:breathe 9s ease-in-out infinite;}
+  .hero::after{animation:drift 12s ease-in-out infinite;}
+
+  /* Hover lift on cards */
+  .item, .price-card, .why-card, .offer-card{transition:transform .35s cubic-bezier(0.16,1,0.3,1), box-shadow .35s ease, border-color .35s ease;}
+  .item:hover{transform:translateY(-4px); border-color:rgba(201,155,63,0.35);}
+  .price-card:hover{transform:translateY(-6px); box-shadow:0 24px 48px rgba(0,0,0,0.35); border-color:rgba(201,155,63,0.4);}
+  .price-card.popular:hover{transform:translateY(-14px);}
+
+  /* Button shine sweep */
+  .btn-primary, .select-btn, .btn{position:relative; overflow:hidden;}
+  .btn-primary::after, .select-btn::after{
+    content:""; position:absolute; top:0; left:-120%; width:60%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform:skewX(-20deg); transition:left .6s ease;
+  }
+  .btn-primary:hover::after, .select-btn:hover::after{left:130%;}
+  .btn-primary{transition:transform .25s ease, box-shadow .25s ease;}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 12px 28px rgba(224,121,60,0.3);}
+
+  /* Nav CTA subtle pulse on load */
+  @keyframes softPulse{
+    0%, 100%{box-shadow:0 0 0 0 rgba(201,155,63,0);}
+    50%{box-shadow:0 0 0 4px rgba(201,155,63,0.08);}
+  }
+  nav a.cta{transition:transform .25s ease;}
+  nav a.cta:hover{transform:translateY(-1px);}
+
+  /* Badge gentle pulse */
+  @keyframes badgePulse{
+    0%, 100%{transform:translateX(-50%) scale(1);}
+    50%{transform:translateX(-50%) scale(1.05);}
+  }
+  .badge{animation:badgePulse 2.5s ease-in-out infinite;}
+
+  @media (prefers-reduced-motion: reduce){
+    .fade-in-up{animation:none; opacity:1;}
+    .hero::before, .hero::after, .badge{animation:none;}
+  }
 </style>
 </head>
 <body>
@@ -133,11 +193,11 @@
 </div>
 
 <header class="wrap hero">
-  <span class="eyebrow">Website & Brand Design</span>
-  <h1>A website that actually brings customers in.</h1>
-  <p class="lede">Custom-built websites for small businesses, plus logo and brand identity design to go with it. No templates, no lock-in — just a professional online presence built around your business.</p>
-  <a class="btn-primary" href="#pricing">See packages & pricing</a>
-  <div class="price-note">Websites from R 9,150 · Logos from R 3,250 · EFT & PayPal accepted</div>
+  <span class="eyebrow fade-in-up delay-1">Website & Brand Design</span>
+  <h1 class="fade-in-up delay-2">A website that actually brings customers in.</h1>
+  <p class="lede fade-in-up delay-3">Custom-built websites for small businesses, plus logo and brand identity design to go with it. No templates, no lock-in — just a professional online presence built around your business.</p>
+  <a class="btn-primary fade-in-up delay-4" href="#pricing">See packages & pricing</a>
+  <div class="price-note fade-in-up delay-5">Websites from R 9,150 · Logos from R 3,250 · EFT & PayPal accepted</div>
 </header>
 
 <div class="rule"></div>
@@ -457,19 +517,35 @@
 </script>
 
 <script>
-  // Subtle scroll-in animation
+  // Scroll-in animation: fade + slide, staggered within each row
   const scrollObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting){
-        entry.target.style.opacity = '1';
+        const el = entry.target;
+        el.style.transitionDelay = el.dataset.delay || '0s';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+        el.addEventListener('transitionend', () => {
+          el.style.transform = '';
+          el.style.transition = '';
+          el.style.transitionDelay = '';
+        }, { once: true });
+        scrollObserver.unobserve(el);
       }
     });
   }, { threshold: 0.15 });
 
-  document.querySelectorAll('.item, .price-card').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transition = 'opacity .5s ease';
-    scrollObserver.observe(el);
+  ['.grid-3', '.price-grid'].forEach(groupSelector => {
+    document.querySelectorAll(groupSelector).forEach(group => {
+      const children = group.querySelectorAll('.item, .price-card');
+      children.forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(24px)';
+        el.style.transition = 'opacity .6s cubic-bezier(0.16,1,0.3,1), transform .6s cubic-bezier(0.16,1,0.3,1)';
+        el.dataset.delay = `${i * 0.12}s`;
+        scrollObserver.observe(el);
+      });
+    });
   });
 </script>
 
